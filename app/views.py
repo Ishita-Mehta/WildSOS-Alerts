@@ -18,14 +18,7 @@ from app.forms  import LoginForm, RegisterForm
 
 
 config = {
-    "apiKey": "AIzaSyBsQFzuptzHUOx1EAOCCJBasg4uHzXM1eY",
-    "authDomain": "test-7d0d1.firebaseapp.com",
-    "databaseURL": "https://test-7d0d1.firebaseio.com",
-    "projectId": "test-7d0d1",
-    "storageBucket": "test-7d0d1.appspot.com",
-    "messagingSenderId": "631901717397",
-    "appId": "1:631901717397:web:ee17a59f9be32d1602ec9c",
-    "measurementId": "G-FR9N37W1GD"
+   #ADD API KEY HERE
 }
 
 
