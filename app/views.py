@@ -161,16 +161,19 @@ def report_incident():
                      "incident_description": request.form['description']            
             }
             
-            db.child("incident").child(inc_id).push(data)        
+            db.child("incident").push(data)        
     return render_template('layouts/default.html',
                             content=render_template( 'pages/user.html') )
 
 # Render the table page
 @app.route('/table.html')
-def table():
-
-    return render_template('layouts/default.html',
-                            content=render_template( 'pages/table.html') )
+def all_incidents():
+    incident_data = db.child('incident').get()
+    incident_data = incident_data.val()
+    keys_list = list(incident_data.keys())
+    print(keys_list)
+    return render_template('layouts/default.html', 
+                            content=render_template( 'pages/table.html', incident_data = incident_data, keys_list = keys_list))
 
 # Render the typography page
 @app.route('/typography.html')

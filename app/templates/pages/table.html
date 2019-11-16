@@ -6,7 +6,10 @@
                             <div class="card strpied-tabled-with-hover">
                                 <div class="card-header ">
                                     <h4 class="card-title">All Reports</h4>
-                                    <p class="card-category">List of all events from various sources of information.</p>
+                                    <p class="card-category">List of all events from various sources of information.
+
+                                        
+                                    </p>
                                 </div>
                                 <div class="card-body table-full-width table-responsive">
                                     <table class="table table-hover table-striped">
@@ -18,9 +21,22 @@
                                             <th>Situation Type</th>
                                             <th>Location</th>
                                             <th>Date and Time</th>
+                                            
                                         </thead>
                                         <tbody>
-                                            
+                                                {% for i in keys_list %}
+                                                <tr>
+                                                    <td>{{ incident_data[i]['incident_id'] }}</td>
+                                                    <td>{{ incident_data[i]['user_fname'] + ' ' + incident_data[i]['user_lname'] }}</td>
+                                                    <td>{{ incident_data[i]['animal'] }}</td>
+                                                    <td>{{ incident_data[i]['incident_type'] }}</td>
+                                                    <td>{{ incident_data[i]['situation_type'] }}</td>
+                                                    <td>{{ incident_data[i]['incident_location'] }}</td>
+                                                    <td>{{ incident_data[i]['incident_date'] + ' ' + incident_data[i]['incident_time'] }}</td>
+                                                
+    
+                                                </tr>
+                                                {% endfor %}
                                         </tbody>
                                     </table>
                                 </div>
