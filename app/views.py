@@ -1,16 +1,21 @@
 # -*- encoding: utf-8 -*-
 
 
-from flask               import render_template, request, url_for, redirect
+from flask               import render_template, request, url_for, redirect, session
 from flask_login         import login_user, logout_user, current_user, login_required
 from werkzeug.exceptions import HTTPException, NotFound, abort
-
-
+from twilio.twiml.messaging_response import MessagingResponse
+from twilio.twiml.voice_response import VoiceResponse, Gather
+from twilio.rest import Client
+ 
 import pyrebase
 import random 
 import string 
 
-
+account_sid = 'ACfa7fe832b6a75655a5ec2bcde267f231'
+auth_token ='23876e0a1b035d233a438238b3c36490'
+incident_type = ''
+situation_type = ''
 
 from app        import app, lm, db, bc
 from app.models import User
@@ -29,6 +34,7 @@ config = {
     "measurementId": "G-FR9N37W1GD"
 }
 
+SECRET_KEY = 'a secret key'
 
 def generate_id():
     list_id = []
@@ -38,9 +44,104 @@ def generate_id():
     list_id.append(gen_id)
     return gen_id
 
+
+def calculate_priority(situation_type, incident_type):
+    incident_type = [ 'Poaching',
+            'Human Wildlife Conflict',
+            'Crop Raiding',
+            'Illegal Trade or Trafficking',
+            'Animal Death',
+            'Damage to livestock, property',
+            ]
+            
+    situation_type = ['critical',
+             'significant', 
+             'minor'
+            ]   
+    incident_priority = 5
+    if situation_type == 'critical' and incident_type in ['Poaching', 'Human Wildlife Conflict', 'Crop Raiding', 'Illegal Trade or Trafficking']:
+                incident_priority = 1
+    elif situation_type == 'critical' and incident_type not in ['Poaching', 'Human Wildlife Conflict', 'Crop Raiding', 'Illegal Trade or Trafficking']:
+                incident_priority = 2
+    elif situation_type == 'significant' and incident_type in ['Poaching', 'Human Wildlife Conflict', 'Crop Raiding', 'Illegal Trade or Trafficking']:
+                incident_priority = 2
+    elif situation_type == 'significant' and incident_type not in ['Poaching', 'Human Wildlife Conflict', 'Crop Raiding', 'Illegal Trade or Trafficking']:
+                incident_priority = 3
+    elif situation_type == 'minor' and incident_type in ['Poaching', 'Human Wildlife Conflict', 'Crop Raiding', 'Illegal Trade or Trafficking']:
+                incident_priority = 4
+    elif situation_type == 'minor' and incident_type not in ['Poaching', 'Human Wildlife Conflict', 'Crop Raiding', 'Illegal Trade or Trafficking']:
+                incident_priority = 5        
+    else:
+                incident_priority = 3    
+    
+    return incident_priority
+
+
 firebase = pyrebase.initialize_app(config)
 
 db = firebase.database()
+
+
+counter=0
+@app.route('/sms', methods=['POST'])
+def sms():
+    global counter
+    animal = ''
+    incident_type = ''
+    situation_type = ''
+    incident_location = ''
+    
+    inc_id = generate_id()
+    number = request.form['From']
+    message_body = request.form['Body']
+    resp = MessagingResponse()
+    boolean=False
+    if message_body.lower()=='wildsosalert' or  message_body.lower()=='wildsos alert':
+        resp.message('Hello {}, please send us the following details in this format:<Animal_Name> <Incident Type Eg. Poaching ,Human Wildlife Conflict etc> <Situation Type Eg.critical ,significant or minor > <Location>'.format(number))
+        counter=counter+1
+    
+    elif counter==0:
+        resp.message('Invalid input! Please send WILDSOS if you would like to report any incident.')
+        
+    else:
+        l=message_body.split(' ')
+        if len(l)>2:
+            animal = l[0]
+            incident_type = l[1]
+            situation_type = l[2]
+            incident_location = l[3] + " " + l[-1]
+            counter=0
+            resp.message('Thank you! All the details have been recorded by us. We will notify the nearest officer and get back to you as soon as possible')
+            incident_priority = calculate_priority(situation_type, incident_type)
+            data = { "user_fname": anon,
+                     "user_lname": '',
+                     "user_phone": number,
+                     "user_email": '',
+                     "user_address": '',
+                     "animal": animal,
+                     "incident_id": inc_id,
+                     "incident_type": incident_type,
+                     "incident_priority": incident_priority,
+                     "situation_type": situation_type,
+                     "incident_location": incident_location, # Make one for long_lat and one for address
+                     "incident_city": '',
+                     "incident_country": '',
+                     "incident_zipcode": '',
+                     "incident_date": '',
+                     "incident_time": '',
+                     "image_url": '',
+                     "incident_description": '',        
+                     "assigned_to": "No one",
+                     "incident_result": ''    
+                    }
+            db.child("incident").push(data)
+        else:
+            resp.message('All details are not entered by the user and try again.')
+            counter=0 
+
+    return str(resp)
+
+
 
 
 
@@ -142,6 +243,10 @@ def report_incident():
     if request.method == "POST":
             inc_id = generate_id()
             
+            incident_type = request.form['incident_type']
+            situation_type = request.form['situation_type']
+            incident_priority = calculate_priority(situation_type, incident_type)  
+
             data = { "user_fname": request.form['fname'],
                      "user_lname": request.form['lname'],
                      "user_phone": request.form['phone'],
@@ -149,16 +254,19 @@ def report_incident():
                      "user_address": request.form['address'],
                      "animal": request.form['animal'],
                      "incident_id": inc_id,
-                     "incident_type": request.form['incident_type'],
-                     "situation_type": request.form['situation_type'],
-                     "incident_location": request.form['incident_location'],
+                     "incident_type": incident_type,
+                     "incident_priority": incident_priority,
+                     "situation_type": situation_type,
+                     "incident_location": request.form['incident_location'], # Make one for long_lat and one for address
                      "incident_city": request.form['incident_city'],
                      "incident_country": request.form['incident_country'],
                      "incident_zipcode": request.form['incident_zipcode'],
                      "incident_date": request.form['incident_date'],
                      "incident_time":request.form['incident_time'],
                      "image_url": request.form['url'],
-                     "incident_description": request.form['description']            
+                     "incident_description": request.form['description'],        
+                     "assigned_to": "No one",
+                     "incident_result": ''    
             }
             
             db.child("incident").push(data)        
