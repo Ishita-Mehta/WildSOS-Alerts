@@ -100,6 +100,11 @@
                                         <input type="text" class="form-control" placeholder="ZIP Code" name = "incident_zipcode">
                                     </div>
                                 </div>
+                                <div class="col-md-3 pl-1">
+                                        <div class="form-group">
+                                        <button onclick="getLocation()"  class="btn btn-info btn-fill pull-right" name = "Access location">Access location</button>
+                                        </div>
+                                    </div>
                             </div>
                             <h4 class="card-title">When?</h4>
                             <div class="row">
@@ -151,6 +156,22 @@
 
 <script src="https://www.gstatic.com/firebasejs/3.7.4/firebase.js"></script>
 <script>
+        var x = document.getElementById("demo");
+        function getLocation() {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(showPosition);
+          } else {
+            x.innerHTML = "Geolocation is not supported by this browser.";
+          }
+        }
+        
+        function showPosition(position) {
+          x.innerHTML = "Latitude: " + position.coords.latitude +
+          "<br>Longitude: " + position.coords.longitude;
+        }
+        </script>
+<script>
+
 //ADD API KEY HERE
 var config = {
 apiKey: "AIzaSyBsQFzuptzHUOx1EAOCCJBasg4uHzXM1eY",
