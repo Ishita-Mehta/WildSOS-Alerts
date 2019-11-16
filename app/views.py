@@ -46,18 +46,18 @@ def generate_id():
 
 
 def calculate_priority(situation_type, incident_type):
-    incident_type = [ 'Poaching',
+    '''incident_list = [ 'Poaching',
             'Human Wildlife Conflict',
             'Crop Raiding',
             'Illegal Trade or Trafficking',
             'Animal Death',
-            'Damage to livestock, property',
+            'Damage to livestock, property'
             ]
             
-    situation_type = ['critical',
+    situation_list = ['critical',
              'significant', 
              'minor'
-            ]   
+            ]   '''
     incident_priority = 5
     if situation_type == 'critical' and incident_type in ['Poaching', 'Human Wildlife Conflict', 'Crop Raiding', 'Illegal Trade or Trafficking']:
                 incident_priority = 1
@@ -300,9 +300,14 @@ def icons():
 # Render the icons page
 @app.route('/notifications.html')
 def notifications():
-
+    incident_data = db.child('incident').get()
+    incident_data = incident_data.val()
+    keys_list = list(incident_data.keys())
+    print(keys_list)
     return render_template('layouts/default.html',
-                            content=render_template( 'pages/notifications.html') )
+                            content=render_template( 'pages/notifications.html', incident_data = incident_data, keys_list = keys_list) ) 
+
+
 
 # App main route + generic routing
 @app.route('/', defaults={'path': 'index.html'})
