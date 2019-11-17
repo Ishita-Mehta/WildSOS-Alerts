@@ -18,9 +18,12 @@ import folium
 
 
 account_sid = 'ACfa7fe832b6a75655a5ec2bcde267f231'
-auth_token ='23876e0a1b035d233a438238b3c36490'
-incident_type = ''
-situation_type = ''
+auth_token = '23876e0a1b035d233a438238b3c36490'
+
+call_incident_type = ''
+call_situation_type = ''
+call_recstr=' '
+call_location=' '
 
 from app        import app, lm, db, bc
 from app.models import User
@@ -137,7 +140,8 @@ def sms():
                      "image_url": '',
                      "incident_description": '',        
                      "assigned_to": "No one",
-                     "incident_result": ''    
+                     "incident_result": '',
+                     "Source": 'SMS'    
                     }
             db.child("incident").push(data)
         else:
@@ -145,6 +149,149 @@ def sms():
             counter=0 
 
     return str(resp)
+
+
+@app.route("/voice", methods=['GET', 'POST'])
+def welcome():
+    """
+    Twilio voice webhook for incoming calls.
+    Respond with a welcome message and ask them to press 1
+    to record a message for the band.
+    """
+    # Start our TwiML response
+    resp = VoiceResponse()
+    resp.say("Welcome to WildSOS")
+    resp.say('Press 1 to report for poaching. Press 2 for human wildlife conflict.')
+   
+    # <Gather> a response from the caller
+    resp.gather(numDigits=1, action='/start-recording')
+
+    return str(resp)
+
+
+@app.route('/start-recording', methods=['GET', 'POST'])
+def start_recording():
+    """Processes the caller's <Gather> input from the welcome view"""
+    global call_incident_type
+    # Start our TwiML response
+    resp = VoiceResponse()
+
+    if 'Digits' in request.values and request.values['Digits'] == '1':
+        call_incident_type = 'poaching'
+        resp.say("You selected poaching. Please select incident type. Now Press 1 for critical. Press 2 for significant. Press 3 for minor incident.")
+             
+    elif 'Digits' in request.values and request.values['Digits'] == '2':
+        call_incident_type = 'human wildlife conflict'
+        resp.say("You selected human wildlife conflict. Please select incident type. Now Press 1 for critical. Press 2 for significant. Press 3 for minor incident.")
+        #resp.gather(numDigits=1, action='/situation')
+        #resp.hangup()
+    else:
+        resp.say("Sorry, I didn't understand that.")
+       
+    resp.gather(numDigits=1, action='/situation')
+
+    return str(resp)
+
+
+
+@app.route('/situation', methods=['GET', 'POST'])
+def situation():
+    """Processes the caller's <Gather> input from the welcome view"""
+    # Start our TwiML response
+    global call_situation_type
+    resp = VoiceResponse()
+
+    # If the caller pressed one, start the recording
+    if 'Digits' in request.values and request.values['Digits'] == '1':
+        call_situation_type = 'critical'
+        resp.say("You pressed for critical situation. Please mention only the location after the beep. Beeeeeeeeep.")
+             
+    elif 'Digits' in request.values and request.values['Digits'] == '2':
+        call_situation_type = 'significant'
+        resp.say("You pressed for significant situation. Please mention only the location after the beep. Beeeeeeeeep.")
+    elif 'Digits' in request.values and request.values['Digits'] == '3':
+        call_situation_type = 'minor'
+        resp.say("You pressed for minor situation. Please mention only the location after the beep. Beeeeeeeeep.")
+    else:
+        resp.say("Sorry, I didn't understand that.")
+        #resp.say("Press 1 to record a message for the band")
+        #resp.gather(numDigits=1, action='/start-recording')
+
+    resp.gather(input='speech',action='/location_text')
+
+    return str(resp)
+
+
+
+@app.route('/location_text', methods=['GET', 'POST'])
+def location_text():
+    global call_location
+    # Start our TwiML response
+    resp = VoiceResponse()
+    call_location=request.values['SpeechResult']
+    #print(call_location)
+    resp.say('Please provide a brief description of the situation after the beep. BEEEEEEEEEEEP')
+    resp.record(max_length="2", action="/end_call")
+    
+    return str(resp)
+
+
+@app.route('/end_call', methods=['GET', 'POST'])
+def end_call():
+ 
+    # Start our TwiML response
+    resp = VoiceResponse()
+    global call_recstr
+    resp.say("Thanks for reporting the crime.")
+    resp.hangup()
+    print(resp)
+    
+    client = Client(account_sid, auth_token)
+
+    recordings = client.recordings.list(limit=20)
+    l=[]
+
+    for record in recordings:
+        l.append(record.sid)
+    rec = l[0]
+
+    call_recstr = 'https://api.twilio.com/2010-04-01/Accounts/ACfa7fe832b6a75655a5ec2bcde267f231/Recordings/' + str(rec) + '.mp3'
+ 
+    inc_id = generate_id()
+    incident_priority = calculate_priority(call_situation_type, call_incident_type)
+    print(call_incident_type)
+    print(incident_priority)
+    print(call_situation_type)
+    print(call_location)
+
+    data = { "user_fname": 'anon',
+                     "user_lname": '',
+                     "user_phone": '',
+                     "user_email": '',
+                     "user_address": '',
+                     "animal": '',
+                     "incident_id": inc_id,
+                     "incident_type": call_incident_type,
+                     "incident_priority": incident_priority,
+                     "situation_type": call_situation_type,
+                     "incident_location": call_location, # Make one for long_lat and one for address
+                     "incident_city": '',
+                     "incident_country": '',
+                     "incident_zipcode": '',
+                     "incident_date": '',
+                     "incident_time": '',
+                     "image_url": '',
+                     "incident_description": '',        
+                     "assigned_to": "No one",
+                     "incident_result": '' ,
+                     "recording": call_recstr,
+                     "source": 'Phone Call'  
+                    }
+
+    db.child("incident").push(data)
+
+    return str(resp)
+
 
 
 
@@ -271,7 +418,8 @@ def report_incident():
                      "image_url": request.form['url'],
                      "incident_description": request.form['description'],        
                      "assigned_to": "No one",
-                     "incident_result": ''    
+                     "incident_result": '',
+                     "source": "WebApp"    
             }
             
             db.child("incident").push(data)        

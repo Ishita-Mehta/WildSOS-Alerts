@@ -14,9 +14,10 @@
                     <div class="card">
                         <div class="card-header">
                             <h4 class="card-title">All Events</h4>
-                            Filter By Incidents:
                           </div>
                           
+                        
+                      
                         <br>
                         
                        <div class="container-fluid">
@@ -42,7 +43,7 @@
                                      
 
                                   </p>
-                                  <a href="#" class="card-link">Voice Recording</a>
+                                  <a href={{ incident_data[i]["recording"] }} class="card-link">Voice Recording</a>
                                               <a href= {{ incident_data[i][ "image_url" ] }} class="card-link">Image</a>
                                   <p>
 
