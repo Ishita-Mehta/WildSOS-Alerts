@@ -116,7 +116,7 @@ def sms():
             counter=0
             resp.message('Thank you! All the details have been recorded by us. We will notify the nearest officer and get back to you as soon as possible')
             incident_priority = calculate_priority(situation_type, incident_type)
-            data = { "user_fname": anon,
+            data = { "user_fname": 'anon',
                      "user_lname": '',
                      "user_phone": number,
                      "user_email": '',
@@ -136,7 +136,7 @@ def sms():
                      "incident_description": '',        
                      "assigned_to": "No one",
                      "incident_result": '',
-                     "Source": 'SMS'    
+                     "source": 'SMS'    
                     }
             db.child("incident").push(data)
         else:
@@ -212,28 +212,17 @@ def situation():
         #resp.say("Press 1 to record a message for the band")
         #resp.gather(numDigits=1, action='/start-recording')
 
-    resp.gather(input='speech',action='/location_text')
+    resp.gather(input='speech',action='/end_call')
 
-    return str(resp)
-
-
-
-@app.route('/location_text', methods=['GET', 'POST'])
-def location_text():
-    global call_location
-    # Start our TwiML response
-    resp = VoiceResponse()
-    call_location=request.values['SpeechResult']
-    #print(call_location)
-    resp.say('Please provide a brief description of the situation after the beep. BEEEEEEEEEEEP')
-    resp.record(max_length="2", action="/end_call")
-    
     return str(resp)
 
 
 @app.route('/end_call', methods=['GET', 'POST'])
 def end_call():
- 
+    global call_location
+    # Start our TwiML response
+    resp = VoiceResponse()
+    call_location=request.values['SpeechResult']
     # Start our TwiML response
     resp = VoiceResponse()
     global call_recstr
@@ -269,7 +258,7 @@ def end_call():
                      "incident_type": call_incident_type,
                      "incident_priority": incident_priority,
                      "situation_type": call_situation_type,
-                     "incident_location": call_location, # Make one for long_lat and one for address
+                     "incident_location": 'New Delhi', # Make one for long_lat and one for address
                      "incident_city": '',
                      "incident_country": '',
                      "incident_zipcode": '',
