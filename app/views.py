@@ -7,10 +7,15 @@ from werkzeug.exceptions import HTTPException, NotFound, abort
 from twilio.twiml.messaging_response import MessagingResponse
 from twilio.twiml.voice_response import VoiceResponse, Gather
 from twilio.rest import Client
- 
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import gmplot 
 import pyrebase
 import random 
 import string 
+import folium
+
 
 account_sid = 'ACfa7fe832b6a75655a5ec2bcde267f231'
 auth_token = '23876e0a1b035d233a438238b3c36490'
@@ -451,13 +456,19 @@ def notifications():
 @app.route('/<path>')
 def index(path):
 
+    
+ 
+    
+    gmap1.draw('app/templates/pages/m.html')
+    return render_template('layouts/default.html',content=render_template( 'pages/'+path ) )
+    # I can add marker one by one on the map
+
+
     content = None
 
     try:
 
-        # try to match the pages defined in -> pages/<input file>
-        return render_template('layouts/default.html',
-                                content=render_template( 'pages/'+path) )
+        
     except:
         
         return 'Oupsss :(', 404
