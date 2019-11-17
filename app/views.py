@@ -13,7 +13,8 @@ import random
 import string 
 
 account_sid = 'ACfa7fe832b6a75655a5ec2bcde267f231'
-auth_token = ''
+auth_token = '23876e0a1b035d233a438238b3c36490'
+
 call_incident_type = ''
 call_situation_type = ''
 call_recstr=' '
@@ -155,7 +156,7 @@ def welcome():
     # Start our TwiML response
     resp = VoiceResponse()
     resp.say("Welcome to WildSOS")
-    resp.say('Thank you for calling wildlife alert. Press 1 to report for poaching. Press 2 for human wildlife conflict. Press 3 for crop raiding. Press 4 for illegal trade or trafficking. Press 5 for egg theft or animal death. Press 6 for damage to livestock property.')
+    resp.say('Press 1 to report for poaching. Press 2 for human wildlife conflict.')
    
     # <Gather> a response from the caller
     resp.gather(numDigits=1, action='/start-recording')
@@ -179,23 +180,6 @@ def start_recording():
         resp.say("You selected human wildlife conflict. Please select incident type. Now Press 1 for critical. Press 2 for significant. Press 3 for minor incident.")
         #resp.gather(numDigits=1, action='/situation')
         #resp.hangup()
-    elif 'Digits' in request.values and request.values['Digits'] == '3':
-        call_incident_type = 'crop raiding'
-        resp.say("You selected crop raiding. Please select incident type. Now Press 1 for critical. Press 2 for significant. Press 3 for minor incident.")
-    elif 'Digits' in request.values and request.values['Digits'] == '4':
-        call_incident_type = 'illegal trade or trafficking'
-        resp.say("You selected illegal trade or trafficking. Please select incident type. Now Press 1 for critical. Press 2 for significant. Press 3 for minor incident.")
-    elif 'Digits' in request.values and request.values['Digits'] == '5':
-        call_incident_type = 'animal death'
-        resp.say("You selected animal death. Please select incident type. Now Press 1 for critical. Press 2 for significant. Press 3 for minor incident.")
-    elif 'Digits' in request.values and request.values['Digits'] == '6':
-        call_incident_type = 'livestock property'
-        resp.say("You selected damage to livestock property. Please select incident type. Now Press 1 for critical. Press 2 for significant. Press 3 for minor incident.")
-     
-        #resp.say('Awesome. Leave a message after the tone.')
-        #resp.record(max_length="30", action="/end-call")
-
-   
     else:
         resp.say("Sorry, I didn't understand that.")
        
@@ -239,15 +223,15 @@ def location_text():
     global call_location
     # Start our TwiML response
     resp = VoiceResponse()
-    location=request.values['SpeechResult']
-    print(call_location)
+    call_location=request.values['SpeechResult']
+    #print(call_location)
     resp.say('Please provide a brief description of the situation after the beep. BEEEEEEEEEEEP')
-    resp.record(max_length="30", action="/end-call")
+    resp.record(max_length="2", action="/end_call")
     
     return str(resp)
 
 
-@app.route('/end-call', methods=['GET', 'POST'])
+@app.route('/end_call', methods=['GET', 'POST'])
 def end_call():
  
     # Start our TwiML response
@@ -269,14 +253,18 @@ def end_call():
     call_recstr = 'https://api.twilio.com/2010-04-01/Accounts/ACfa7fe832b6a75655a5ec2bcde267f231/Recordings/' + str(rec) + '.mp3'
  
     inc_id = generate_id()
-    incident_priority = calculate_priority(situation_type, incident_type)
+    incident_priority = calculate_priority(call_situation_type, call_incident_type)
+    print(call_incident_type)
+    print(incident_priority)
+    print(call_situation_type)
+    print(call_location)
 
-    data = { "user_fname": anon,
+    data = { "user_fname": 'anon',
                      "user_lname": '',
-                     "user_phone": number,
+                     "user_phone": '',
                      "user_email": '',
                      "user_address": '',
-                     "animal": animal,
+                     "animal": '',
                      "incident_id": inc_id,
                      "incident_type": call_incident_type,
                      "incident_priority": incident_priority,
