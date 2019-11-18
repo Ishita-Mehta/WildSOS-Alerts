@@ -1,12 +1,5 @@
 # -*- encoding: utf-8 -*-
-"""
-Light Bootstrap Dashboard - coded in Flask
 
-Author  : AppSeed App Generator
-Design  : Creative-Tim.com
-License : MIT 
-Support : https://appseed.us/support 
-"""
 
 # used by the static export
 import click

@@ -263,7 +263,7 @@ def end_call():
                      "incident_type": call_incident_type,
                      "incident_priority": incident_priority,
                      "situation_type": call_situation_type,
-                     "incident_location": 'New Delhi', # Make one for long_lat and one for address
+                     "incident_location": call_location, # Make one for long_lat and one for address
                      "incident_city": '',
                      "incident_country": '',
                      "incident_zipcode": '',
