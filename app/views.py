@@ -17,8 +17,8 @@ import string
 import folium
 
 
-account_sid = 'ACfa7fe832b6a75655a5ec2bcde267f231'
-auth_token = '23876e0a1b035d233a438238b3c36490'
+account_sid = ''
+auth_token = ''
 
 call_incident_type = ''
 call_situation_type = ''
@@ -32,14 +32,7 @@ from app.forms  import LoginForm, RegisterForm
 
 config = {
    #ADD API KEY HERE
-   "apiKey": "AIzaSyBsQFzuptzHUOx1EAOCCJBasg4uHzXM1eY",
-    "authDomain": "test-7d0d1.firebaseapp.com",
-    "databaseURL": "https://test-7d0d1.firebaseio.com",
-    "projectId": "test-7d0d1",
-    "storageBucket": "test-7d0d1.appspot.com",
-    "messagingSenderId": "631901717397",
-    "appId": "1:631901717397:web:ee17a59f9be32d1602ec9c",
-    "measurementId": "G-FR9N37W1GD"
+   
 }
 
 SECRET_KEY = 'a secret key'
